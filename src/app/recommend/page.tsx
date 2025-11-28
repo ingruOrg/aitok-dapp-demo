@@ -735,11 +735,11 @@ export default function RecommendPage() {
   }, []);
 
   // Handle redirect if user is not connected
-  useEffect(() => {
-    if (!publicKey) {
-      router.push('/profile');
-    }
-  }, [publicKey, router]);
+  // useEffect(() => {
+  //   if (!publicKey) {
+  //     router.push('/profile');
+  //   }
+  // }, [publicKey, router]);
 
   const fetchPosts = async () => {
     try {
