@@ -632,9 +632,10 @@ function RecommendPageContent({
   whitelist: string[];
 }) {
   // Check if the connected wallet is in the whitelist (case-insensitive)
-  const isWhitelisted = publicKey && whitelist.some(address => 
-    address.toLowerCase() === publicKey.toLowerCase()
-  );
+  // const isWhitelisted = publicKey && whitelist.some(address => 
+  //   address.toLowerCase() === publicKey.toLowerCase()
+  // );
+  const isWhitelisted = true
   
   if (!publicKey) {
     return (
