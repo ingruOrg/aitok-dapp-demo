@@ -7,6 +7,7 @@ import { ContentListPage } from "@/components/ContentListPage";
 import { TikTokFeed } from "@/components/TikTokFeed";
 import { useWallet } from "@/hooks/useWallet";
 import { SearchOutlined } from "@ant-design/icons";
+import { Card } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -20,12 +21,35 @@ const TopNavigation = ({
   onTabChange: (tab: string) => void;
   backgroundColor?: string;
 }) => {
+  // Use useState to ensure consistent rendering between server and client
+  const [mounted, setMounted] = useState(false);
+  
+  // Only show the component after first client-side render to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const tabs = [
     { key: "explore", label: "探索" },
     { key: "following", label: "关注" },
     { key: "recommend", label: "推荐" },
   ];
 
+  // Don't render anything until after client-side hydration
+  if (!mounted) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "60px", // Placeholder height to prevent layout shift
+          zIndex: 1000,
+        }}
+      />
+    );
+  }
+  
   return (
     <div
       style={{
@@ -587,34 +611,62 @@ const FollowingFeed = ({
   );
 };
 
-export default function RecommendPage() {
-  const { publicKey } = useWallet();
-  const router = useRouter();
-  const [posts, setPosts] = useState<ApiPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("recommend");
+// Create a separate client component to handle the actual content
+function RecommendPageContent({ 
+  publicKey, 
+  posts, 
+  loading, 
+  activeTab, 
+  setActiveTab, 
+  fetchPosts, 
+  router,
+  whitelist 
+}: { 
+  publicKey: string | null; 
+  posts: ApiPost[]; 
+  loading: boolean; 
+  activeTab: string; 
+  setActiveTab: (tab: string) => void; 
+  fetchPosts: () => void; 
+  router: any;
+  whitelist: string[];
+}) {
+  // Check if the connected wallet is in the whitelist (case-insensitive)
+  const isWhitelisted = publicKey && whitelist.some(address => 
+    address.toLowerCase() === publicKey.toLowerCase()
+  );
+  
+  if (!publicKey) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Redirecting to profile page...</div>
+      </div>
+    );
+  }
+  
+  if (!isWhitelisted) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Card>
+          <h1>Access Denied</h1>
+          <p>Your wallet is not whitelisted for this application</p>
+          <p>Your public key: {publicKey}</p>
+        </Card>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
-      // For now, we're using the same API as the home page
-      // In a real app, this would be a different API endpoint for recommended posts
-      const walletAddress = publicKey ? publicKey : undefined;
-      const fetchedPosts = await api.posts.list(walletAddress);
-      setPosts(fetchedPosts);
-    } catch (error) {
-      console.error("Error fetching recommended posts:", error);
-    } finally {
-      setLoading(false);
+  // 根据选中的 tab 确定背景色
+  const getBackgroundColor = () => {
+    switch (activeTab) {
+      case "recommend":
+        return "transparent";
+      case "explore":
+      case "following":
+      default:
+        return "#000000";
     }
   };
-
-  const renderPost = (post: ApiPost) => (
-    <Post key={post.id} post={post} onUpdate={fetchPosts} />
-  );
 
   // 根据选中的 tab 渲染不同内容
   const renderTabContent = () => {
@@ -644,18 +696,6 @@ export default function RecommendPage() {
     }
   };
 
-  // 根据选中的 tab 确定背景色
-  const getBackgroundColor = () => {
-    switch (activeTab) {
-      case "recommend":
-        return "transparent";
-      case "explore":
-      case "following":
-      default:
-        return "#000000";
-    }
-  };
-
   return (
     <div>
       <TopNavigation
@@ -665,5 +705,75 @@ export default function RecommendPage() {
       />
       {renderTabContent()}
     </div>
+  );
+}
+
+export default function RecommendPage() {
+  const { publicKey } = useWallet();
+  const router = useRouter();
+  const [posts, setPosts] = useState<ApiPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("recommend");
+  const [mounted, setMounted] = useState(false);
+  
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Simple whitelist of allowed public keys
+  const whitelist = [
+    // Add whitelisted public keys here
+    '0x05Fbc4Cd8615240FEe8806759448102C1d8f5B5c',
+    '22222222222222222222222222222222',
+    // Add more as needed
+  ];
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  // Handle redirect if user is not connected
+  useEffect(() => {
+    if (!publicKey) {
+      router.push('/profile');
+    }
+  }, [publicKey, router]);
+
+  const fetchPosts = async () => {
+    try {
+      // For now, we're using the same API as the home page
+      // In a real app, this would be a different API endpoint for recommended posts
+      const walletAddress = publicKey ? publicKey : undefined;
+      const fetchedPosts = await api.posts.list(walletAddress);
+      setPosts(fetchedPosts);
+    } catch (error) {
+      console.error("Error fetching recommended posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // During server rendering and initial hydration, show a simple skeleton
+  if (!mounted) {
+    return (
+      <div style={{ height: '100vh', background: '#000000' }}>
+        <div style={{ height: '60px' }} />
+      </div>
+    );
+  }
+  
+  // After client-side hydration, render the full content
+  return (
+    <RecommendPageContent
+      publicKey={publicKey}
+      posts={posts}
+      loading={loading}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      fetchPosts={fetchPosts}
+      router={router}
+      whitelist={whitelist}
+    />
   );
 }
