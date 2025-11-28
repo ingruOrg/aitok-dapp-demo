@@ -725,7 +725,7 @@ export default function RecommendPage() {
   const whitelist = [
     // Add whitelisted public keys here
     '0x05Fbc4Cd8615240FEe8806759448102C1d8f5B5c',
-    '22222222222222222222222222222222',
+    '0x10D9fE20B5F1Eb5861b0b007Ba02343202B3d324',
     // Add more as needed
   ];
 
