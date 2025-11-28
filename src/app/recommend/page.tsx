@@ -637,13 +637,13 @@ function RecommendPageContent({
   // );
   const isWhitelisted = true
   
-  if (!publicKey) {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div>Redirecting to profile page...</div>
-      </div>
-    );
-  }
+  // if (!publicKey) {
+  //   return (
+  //     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  //       <div>Redirecting to profile page...</div>
+  //     </div>
+  //   );
+  // }
   
   if (!isWhitelisted) {
     return (
