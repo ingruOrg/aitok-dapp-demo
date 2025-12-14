@@ -632,18 +632,18 @@ function RecommendPageContent({
   whitelist: string[];
 }) {
   // Check if the connected wallet is in the whitelist (case-insensitive)
-  // const isWhitelisted = publicKey && whitelist.some(address => 
-  //   address.toLowerCase() === publicKey.toLowerCase()
-  // );
-  const isWhitelisted = true
+  const isWhitelisted = publicKey && whitelist.some(address => 
+    address.toLowerCase() === publicKey.toLowerCase()
+  );
+  //const isWhitelisted = true
   
-  // if (!publicKey) {
-  //   return (
-  //     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-  //       <div>Redirecting to profile page...</div>
-  //     </div>
-  //   );
-  // }
+  if (!publicKey) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Redirecting to profile page...</div>
+      </div>
+    );
+  }
   
   if (!isWhitelisted) {
     return (
@@ -727,6 +727,7 @@ export default function RecommendPage() {
     // Add whitelisted public keys here
     '0x05Fbc4Cd8615240FEe8806759448102C1d8f5B5c',
     '0x10D9fE20B5F1Eb5861b0b007Ba02343202B3d324',
+    '0x204A3A6574272bA6937F03adc325bc8b45b368F8',
     // Add more as needed
   ];
 
